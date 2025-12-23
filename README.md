@@ -62,7 +62,7 @@ smart-rag-api/
 │       └── text_processing.py  # Text chunking with overlap
 ├── sample_files/               # Sample test files
 │   ├── sample.csv
-│   ├── sample.txt
+│   └── sample.txt
 │   
 ├── data/
 │   └── vector_store/           # FAISS index storage
