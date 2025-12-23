@@ -1,17 +1,12 @@
 FROM python:3.10-slim
 
-# Install system dependencies for OCR
-RUN apt-get update && apt-get install -y \
-    tesseract-ocr \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libgl1-mesa-glx \
-    && rm -rf /var/lib/apt/lists/*
-
 # Set working directory
 WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first (for caching)
 COPY requirements.txt .
