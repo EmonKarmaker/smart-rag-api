@@ -60,6 +60,10 @@ smart-rag-api/
 │   └── utils/
 │       ├── __init__.py
 │       └── text_processing.py  # Text chunking with overlap
+├── sample_files/               # Sample test files
+│   ├── sample.pdf
+│   ├── sample.txt
+│   └── sample.csv
 ├── data/
 │   └── vector_store/           # FAISS index storage
 ├── uploads/                    # Uploaded documents
@@ -210,6 +214,30 @@ Content-Type: application/json
 | `/stats` | GET | Vector store statistics |
 | `/clear` | DELETE | Clear all documents |
 
+## 📂 Sample Files
+
+The `sample_files/` directory contains test files you can use to try the API:
+
+| File | Type | Description |
+|------|------|-------------|
+| `sample.txt` | Text | Simple text document for testing |
+| `sample.csv` | CSV | Sample data in CSV format |
+
+### Testing with Sample Files
+
+```bash
+# Upload sample text file
+curl -X POST "http://127.0.0.1:8000/upload" -F "file=@sample_files/sample.txt"
+
+# Upload sample CSV
+curl -X POST "http://127.0.0.1:8000/upload" -F "file=@sample_files/sample.csv"
+
+# Query the uploaded documents
+curl -X POST "http://127.0.0.1:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What information is in the sample files?", "top_k": 3}'
+```
+
 ## 🐳 Docker
 
 ### Build and Run
@@ -238,24 +266,73 @@ services:
       - ./data:/app/data
 ```
 
-## ⚙️ Configuration
+## ⚙️ Environment Setup
 
-### Environment Variables
+### Step 1: Install Tesseract OCR
 
-Create a `.env` file:
+**Windows:**
+1. Download from [UB-Mannheim/tesseract](https://github.com/UB-Mannheim/tesseract/wiki)
+2. Run installer
+3. Add to PATH: `C:\Program Files\Tesseract-OCR`
+
+**Linux:**
+```bash
+sudo apt-get install tesseract-ocr
+```
+
+**Mac:**
+```bash
+brew install tesseract
+```
+
+### Step 2: Get HuggingFace API Token
+
+1. Go to [HuggingFace Settings](https://huggingface.co/settings/tokens)
+2. Create new token with "Read" access
+3. Copy the token (starts with `hf_`)
+
+### Step 3: Configure Environment Variables
+
+Create a `.env` file in the project root:
 
 ```env
-# Embedding Model (runs locally)
+# Embedding Model (runs locally, free)
 EMBEDDING_MODEL=all-MiniLM-L6-v2
 
 # LLM Provider
 LLM_PROVIDER=huggingface
 
-# HuggingFace Settings (get token from https://huggingface.co/settings/tokens)
+# HuggingFace Settings
 HUGGINGFACE_API_KEY=hf_your_token_here
 HUGGINGFACE_MODEL=HuggingFaceH4/zephyr-7b-beta
 
 # Directories
+UPLOAD_DIR=uploads
+VECTOR_STORE_DIR=data/vector_store
+```
+
+### Sample .env File
+
+A sample `.env.example` file is included in the repository:
+
+```env
+# ============================================
+# Smart RAG API - Environment Configuration
+# ============================================
+
+# Embedding Model (runs locally, free)
+# Uses SentenceTransformers from HuggingFace
+EMBEDDING_MODEL=all-MiniLM-L6-v2
+
+# LLM Provider: "huggingface" (recommended)
+LLM_PROVIDER=huggingface
+
+# HuggingFace Settings
+# Get your free API token from: https://huggingface.co/settings/tokens
+HUGGINGFACE_API_KEY=hf_your_token_here
+HUGGINGFACE_MODEL=HuggingFaceH4/zephyr-7b-beta
+
+# Directory Settings
 UPLOAD_DIR=uploads
 VECTOR_STORE_DIR=data/vector_store
 ```
@@ -292,9 +369,11 @@ curl -X POST "http://127.0.0.1:8000/query" \
   -d '{"question": "What text is in this image?", "image_base64": "BASE64_STRING"}'
 ```
 
-## 🔗 Live Demo
+## 🔗 Live Demo (Deployed Version)
 
 🌐 **HuggingFace Space**: [Smart RAG API Demo](https://huggingface.co/spaces/EdwardConstantine/Smart-Rag-Api)
+
+The deployed version demonstrates the core RAG functionality with a Streamlit interface.
 
 ## 📈 Evaluation Criteria Met
 
@@ -306,6 +385,19 @@ curl -X POST "http://127.0.0.1:8000/query" \
 | API design & FastAPI usage | 15% | ✅ |
 | Prompt engineering & LLM response | 15% | ✅ |
 | Bonus (Docker, LangChain, UI, etc.) | 15% | ✅ |
+
+## 📦 Submission Contents
+
+This repository includes:
+
+- ✅ **Source code** - Complete FastAPI application in `app/` directory
+- ✅ **Sample files** - Test files in `sample_files/` directory
+- ✅ **README.md** with:
+  - ✅ Instructions (Quick Start section)
+  - ✅ API usage (API Endpoints section)
+  - ✅ Environment setup (Environment Setup section)
+  - ✅ Sample .env (Configuration section)
+- ✅ **Deployed version** - [HuggingFace Space](https://huggingface.co/spaces/EdwardConstantine/Smart-Rag-Api)
 
 ## 👨‍💻 Author
 
