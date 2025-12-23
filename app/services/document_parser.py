@@ -1,5 +1,6 @@
 import os
 import pdfplumber
+import pytesseract
 from PIL import Image
 from docx import Document
 import pandas as pd
@@ -9,6 +10,12 @@ from pathlib import Path
 from app.config import settings
 from app.utils.text_processing import chunk_text
 
+# Configure Tesseract path for Windows
+if os.name == 'nt':
+    tesseract_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    if os.path.exists(tesseract_path):
+        pytesseract.pytesseract.tesseract_cmd = tesseract_path
+
 
 class DocumentParser:
     """Handles parsing of various document types."""
@@ -17,22 +24,13 @@ class DocumentParser:
         self.supported_extensions = settings.SUPPORTED_EXTENSIONS
     
     def parse(self, file_path: str) -> dict:
-        """
-        Parse a document and return extracted text with metadata.
-        
-        Args:
-            file_path: Path to the file
-            
-        Returns:
-            Dict with 'text', 'chunks', 'metadata'
-        """
+        """Parse a document and return extracted text with metadata."""
         file_path = Path(file_path)
         extension = file_path.suffix.lower()
         
         if extension not in self.supported_extensions:
             raise ValueError(f"Unsupported file type: {extension}")
         
-        # Route to appropriate parser
         if extension == ".pdf":
             text = self._parse_pdf(file_path)
         elif extension == ".docx":
@@ -48,10 +46,8 @@ class DocumentParser:
         else:
             raise ValueError(f"No parser for: {extension}")
         
-        # Create chunks
         chunks = chunk_text(text)
         
-        # Add metadata to each chunk
         for chunk in chunks:
             chunk["source"] = file_path.name
             chunk["file_type"] = extension
@@ -67,12 +63,21 @@ class DocumentParser:
         }
     
     def _parse_pdf(self, file_path: Path) -> str:
-        """Extract text from PDF using pdfplumber."""
+        """Extract text from PDF using pdfplumber with OCR fallback."""
         text_parts = []
         
         with pdfplumber.open(file_path) as pdf:
             for page_num, page in enumerate(pdf.pages):
                 page_text = page.extract_text() or ""
+                
+                # OCR fallback for scanned pages
+                if not page_text.strip():
+                    try:
+                        img = page.to_image()
+                        page_text = pytesseract.image_to_string(img.original)
+                    except:
+                        page_text = ""
+                
                 if page_text.strip():
                     text_parts.append(f"[Page {page_num + 1}]\n{page_text}")
         
@@ -90,21 +95,21 @@ class DocumentParser:
             return f.read()
     
     def _parse_image(self, file_path: Path) -> str:
-        """Return placeholder for image (OCR not available in cloud)."""
-        return f"[Image file: {file_path.name} - OCR not available in cloud deployment]"
+        """Extract text from image using OCR (pytesseract)."""
+        img = Image.open(file_path)
+        text = pytesseract.image_to_string(img)
+        return text
     
     def _parse_csv(self, file_path: Path) -> str:
-        """Convert CSV to readable text."""
+        """Convert CSV to readable text using pandas."""
         df = pd.read_csv(file_path)
         
-        # Convert to readable format
         lines = []
         lines.append(f"Columns: {', '.join(df.columns.tolist())}")
         lines.append(f"Total rows: {len(df)}")
         lines.append("\nData:")
         
-        # Add each row as text
-        for idx, row in df.head(100).iterrows():
+        for idx, row in df.iterrows():
             row_text = " | ".join([f"{col}: {val}" for col, val in row.items()])
             lines.append(row_text)
         
@@ -115,7 +120,6 @@ class DocumentParser:
         conn = sqlite3.connect(file_path)
         cursor = conn.cursor()
         
-        # Get all tables
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         tables = cursor.fetchall()
         
@@ -124,12 +128,10 @@ class DocumentParser:
             table_name = table[0]
             lines.append(f"\n=== Table: {table_name} ===")
             
-            # Get table data
-            df = pd.read_sql_query(f"SELECT * FROM {table_name} LIMIT 100", conn)
+            df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
             lines.append(f"Columns: {', '.join(df.columns.tolist())}")
             lines.append(f"Rows: {len(df)}")
             
-            # Add data
             for idx, row in df.iterrows():
                 row_text = " | ".join([f"{col}: {val}" for col, val in row.items()])
                 lines.append(row_text)
@@ -138,5 +140,4 @@ class DocumentParser:
         return "\n".join(lines)
 
 
-# Create singleton instance
 document_parser = DocumentParser()

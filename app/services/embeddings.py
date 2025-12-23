@@ -3,7 +3,7 @@ from app.config import settings
 
 
 class EmbeddingService:
-    """Handles text embedding generation using SentenceTransformers."""
+    """Handles text embedding using SentenceTransformers (HuggingFace)."""
     
     def __init__(self):
         self.model = None
@@ -18,38 +18,22 @@ class EmbeddingService:
         return self.model
     
     def embed_text(self, text: str) -> list[float]:
-        """
-        Generate embedding for a single text.
-        
-        Args:
-            text: Text to embed
-            
-        Returns:
-            List of floats (embedding vector)
-        """
+        """Generate embedding for a single text."""
         model = self._load_model()
         embedding = model.encode(text)
         return embedding.tolist()
     
     def embed_texts(self, texts: list[str]) -> list[list[float]]:
-        """
-        Generate embeddings for multiple texts.
-        
-        Args:
-            texts: List of texts to embed
-            
-        Returns:
-            List of embedding vectors
-        """
+        """Generate embeddings for multiple texts."""
         model = self._load_model()
         embeddings = model.encode(texts)
         return embeddings.tolist()
     
     def get_embedding_dimension(self) -> int:
-        """Get the dimension of embeddings from this model."""
+        """Get the dimension of embeddings."""
         model = self._load_model()
         return model.get_sentence_embedding_dimension()
 
 
-# Create singleton instance
+# Create singleton instance - THIS LINE IS IMPORTANT
 embedding_service = EmbeddingService()
