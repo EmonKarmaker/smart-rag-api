@@ -369,11 +369,7 @@ curl -X POST "http://127.0.0.1:8000/query" \
   -d '{"question": "What text is in this image?", "image_base64": "BASE64_STRING"}'
 ```
 
-## 🔗 Live Demo (Deployed Version)
 
-🌐 **HuggingFace Space**: [Smart RAG API Demo](https://huggingface.co/spaces/EdwardConstantine/Smart-Rag-Api)
-
-The deployed version demonstrates the core RAG functionality with a Streamlit interface.
 
 ## 📈 Evaluation Criteria Met
 
