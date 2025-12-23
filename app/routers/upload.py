@@ -9,6 +9,18 @@ from app.services.vector_store import vector_store
 
 router = APIRouter()
 
+# File-type icons mapping
+FILE_ICONS = {
+    ".pdf": "📕",
+    ".docx": "📝",
+    ".txt": "📄",
+    ".jpg": "🖼️",
+    ".jpeg": "🖼️",
+    ".png": "🖼️",
+    ".csv": "📊",
+    ".db": "🗃️"
+}
+
 
 @router.post("/upload")
 async def upload_document(file: UploadFile = File(...)):
@@ -16,6 +28,8 @@ async def upload_document(file: UploadFile = File(...)):
     Upload a document and process it into the vector store.
     
     Supported formats: .pdf, .docx, .txt, .jpg, .jpeg, .png, .csv, .db
+    
+    Returns file_id and metadata with file-type icon.
     """
     # Validate file extension
     file_ext = Path(file.filename).suffix.lower()
@@ -48,13 +62,25 @@ async def upload_document(file: UploadFile = File(...)):
         # Add to vector store
         chunks_added = vector_store.add_documents(parsed["chunks"])
         
+        # Get file icon
+        file_icon = FILE_ICONS.get(file_ext, "📁")
+        
         return {
             "success": True,
             "file_id": file_id,
             "filename": file.filename,
             "file_type": file_ext,
+            "file_icon": file_icon,
             "chunks_created": chunks_added,
-            "message": f"Document processed successfully. {chunks_added} chunks added to knowledge base."
+            "metadata": {
+                "original_name": file.filename,
+                "stored_name": safe_filename,
+                "file_size_bytes": len(content),
+                "file_type": file_ext,
+                "icon": file_icon,
+                "total_chunks": chunks_added
+            },
+            "message": f"{file_icon} Document processed successfully. {chunks_added} chunks added to knowledge base."
         }
     
     except Exception as e:
@@ -69,19 +95,27 @@ async def upload_document(file: UploadFile = File(...)):
 
 @router.get("/files")
 async def list_files():
-    """List all uploaded files."""
+    """List all uploaded files with icons and metadata."""
     upload_dir = Path(settings.UPLOAD_DIR)
     
     if not upload_dir.exists():
-        return {"files": []}
+        return {"files": [], "total": 0}
     
     files = []
     for file_path in upload_dir.iterdir():
-        if file_path.is_file():
+        if file_path.is_file() and not file_path.name.startswith('.'):
+            file_ext = file_path.suffix.lower()
+            file_icon = FILE_ICONS.get(file_ext, "📁")
+            
             files.append({
                 "filename": file_path.name,
+                "file_type": file_ext,
+                "file_icon": file_icon,
                 "size_bytes": file_path.stat().st_size,
-                "file_type": file_path.suffix.lower()
+                "metadata": {
+                    "icon": file_icon,
+                    "extension": file_ext
+                }
             })
     
     return {"files": files, "total": len(files)}
