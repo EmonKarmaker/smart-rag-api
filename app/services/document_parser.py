@@ -1,6 +1,5 @@
 import os
-import fitz  # PyMuPDF
-import pytesseract
+import pdfplumber
 from PIL import Image
 from docx import Document
 import pandas as pd
@@ -9,12 +8,6 @@ from pathlib import Path
 
 from app.config import settings
 from app.utils.text_processing import chunk_text
-
-# Configure Tesseract path for Windows
-if os.name == 'nt':  # Windows
-    tesseract_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-    if os.path.exists(tesseract_path):
-        pytesseract.pytesseract.tesseract_cmd = tesseract_path
 
 
 class DocumentParser:
@@ -74,24 +67,15 @@ class DocumentParser:
         }
     
     def _parse_pdf(self, file_path: Path) -> str:
-        """Extract text from PDF, with OCR fallback for scanned pages."""
+        """Extract text from PDF using pdfplumber."""
         text_parts = []
         
-        doc = fitz.open(file_path)
-        for page_num, page in enumerate(doc):
-            # Try normal text extraction
-            page_text = page.get_text()
-            
-            # If no text, try OCR
-            if not page_text.strip():
-                pix = page.get_pixmap()
-                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-                page_text = pytesseract.image_to_string(img)
-            
-            if page_text.strip():
-                text_parts.append(f"[Page {page_num + 1}]\n{page_text}")
+        with pdfplumber.open(file_path) as pdf:
+            for page_num, page in enumerate(pdf.pages):
+                page_text = page.extract_text() or ""
+                if page_text.strip():
+                    text_parts.append(f"[Page {page_num + 1}]\n{page_text}")
         
-        doc.close()
         return "\n\n".join(text_parts)
     
     def _parse_docx(self, file_path: Path) -> str:
@@ -106,10 +90,8 @@ class DocumentParser:
             return f.read()
     
     def _parse_image(self, file_path: Path) -> str:
-        """Extract text from image using OCR."""
-        img = Image.open(file_path)
-        text = pytesseract.image_to_string(img)
-        return text
+        """Return placeholder for image (OCR not available in cloud)."""
+        return f"[Image file: {file_path.name} - OCR not available in cloud deployment]"
     
     def _parse_csv(self, file_path: Path) -> str:
         """Convert CSV to readable text."""
@@ -122,7 +104,7 @@ class DocumentParser:
         lines.append("\nData:")
         
         # Add each row as text
-        for idx, row in df.iterrows():
+        for idx, row in df.head(100).iterrows():
             row_text = " | ".join([f"{col}: {val}" for col, val in row.items()])
             lines.append(row_text)
         
@@ -143,7 +125,7 @@ class DocumentParser:
             lines.append(f"\n=== Table: {table_name} ===")
             
             # Get table data
-            df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
+            df = pd.read_sql_query(f"SELECT * FROM {table_name} LIMIT 100", conn)
             lines.append(f"Columns: {', '.join(df.columns.tolist())}")
             lines.append(f"Rows: {len(df)}")
             
