@@ -1,0 +1,32 @@
+Smart RAG API - Sample Document
+
+This is a sample text document for testing the Smart RAG API.
+
+About This Project:
+The Smart RAG API is a Retrieval-Augmented Generation system that can answer questions based on uploaded documents. It supports multiple file formats including PDF, DOCX, TXT, images, CSV, and SQLite databases.
+
+Key Features:
+- Document parsing and text extraction
+- Vector embeddings using SentenceTransformers
+- FAISS-powered similarity search
+- LLM-based answer generation using HuggingFace Hub
+- OCR support for images using Tesseract
+- LangChain for orchestration
+
+Technologies Used:
+- FastAPI for the REST API
+- FAISS for vector storage
+- SentenceTransformers for embeddings
+- HuggingFace Hub for LLM
+- pytesseract for OCR
+- pdfplumber for PDF parsing
+- python-docx for Word documents
+- pandas for CSV and data handling
+
+Sample Questions You Can Ask:
+1. What is this document about?
+2. What are the key features of this project?
+3. What technologies are used in this project?
+4. How does the RAG pipeline work?
+
+This sample file demonstrates the text parsing capabilities of the Smart RAG API.
