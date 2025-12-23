@@ -1,0 +1,35 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+python-multipart==0.0.9
+
+# Document parsing
+PyMuPDF==1.24.0
+python-docx==1.1.0
+pdfplumber==0.11.0
+pandas==2.2.0
+
+# OCR
+pytesseract==0.3.10
+Pillow==10.3.0
+
+# Embeddings & Vector Store
+sentence-transformers==3.0.0
+faiss-cpu==1.8.0
+
+# LangChain (for orchestration)
+langchain==0.2.0
+langchain-community==0.2.0
+
+# LLM - HuggingFace Hub (FREE)
+huggingface-hub==0.34.0
+
+# Local LLM (optional)
+ollama==0.3.0
+
+# Utilities
+python-dotenv==1.0.1
+aiofiles==24.1.0
+
+# Streamlit UI
+streamlit==1.38.0
+requests==2.32.0

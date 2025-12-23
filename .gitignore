@@ -1,0 +1,38 @@
+# Virtual environment
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Environment variables
+.env
+
+# Uploaded files (keep folder but ignore contents)
+uploads/*
+!uploads/.gitkeep
+
+# Vector store data (keep folder but ignore contents)
+data/vector_store/*
+!data/vector_store/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Distribution
+dist/
+build/
+*.egg-info/
